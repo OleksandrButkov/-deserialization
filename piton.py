@@ -9,16 +9,19 @@ class AddressBook(UserDict):
         self.data[record.name.value] = record
 
     def save(self):
+        # writing data to a file
         with open('filename.json', 'w') as file:
             json.dump(self.to_dict(), file, indent=4)
             print("Users saved.")
 
     def to_dict(self):
+        # add data to dict
         return {
             name: record.to_dict() for name, record in self.data.items()
         }
 
     def load(self):
+        # get dictionary from json file
         with open('filename.json', 'r') as file:
             data = json.load(file)
             self.data = {
@@ -41,16 +44,16 @@ class AddressBook(UserDict):
                 return
 
     def search(self):
+        # search values by keywords
         keyword = input('Input keyword: ')
         results = []
         for record in self.data.values():
-            if keyword.lower() in record.name.value.lower():
+            # convert to lower case to compare the entered keyword among values
+            # add value to list if True
+            if keyword.lower() in record.name.value.lower() or any(
+                    keyword.lower() in phone.value.lower()[:len(keyword)] for phone in record.phones
+            ):
                 results.append(record)
-            else:
-                for phone in record.phones:
-                    if keyword in phone.value:
-                        results.append(record)
-                        break
 
         if results:
             print("Search results:")
@@ -72,6 +75,7 @@ class Record:
         self.birthday = birthday
 
     def to_dict(self):
+        # make dict of phone and birthday
         return {
             'name': self.name.value,
             'phones': [phone.value for phone in self.phones] if self.phones else None,
@@ -149,4 +153,3 @@ if __name__ == '__main__':
     ab.save()
     ab.load()
     ab.search()
-
