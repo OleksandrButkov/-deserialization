@@ -6,13 +6,12 @@ import json
 class AddressBook(UserDict):
 
     def add_record(self, record):
-        self.data[record.name.value] = record  # Записи Record в AddressBook зберігаються як значення у словнику.
-        # Як ключі використовується значення Record.name.value.
+        self.data[record.name.value] = record
 
     def save(self):
         with open('filename.json', 'w') as file:
             json.dump(self.to_dict(), file, indent=4)
-            print("users saved")
+            print("Users saved.")
 
     def to_dict(self):
         return {
@@ -21,8 +20,17 @@ class AddressBook(UserDict):
 
     def load(self):
         with open('filename.json', 'r') as file:
-            self.data = json.load(file)
-            print('load end')
+            data = json.load(file)
+            self.data = {
+                name: Record(
+                    Name(record_data['name']),
+                    Phone(record_data['phones'][0]) if record_data['phones'] else None,
+                    Birthday(datetime.strptime(record_data['birthday'], '%Y-%m-%d')) if record_data[
+                        'birthday'] else None
+                )
+                for name, record_data in data.items()
+            }
+            print("Data loaded from file.")
 
     def iterator(self, n):
         count = 0
@@ -33,7 +41,7 @@ class AddressBook(UserDict):
                 return
 
     def search(self):
-        keyword = input('Input  keyword: ')
+        keyword = input('Input keyword: ')
         results = []
         for record in self.data.values():
             if keyword.lower() in record.name.value.lower():
@@ -43,6 +51,7 @@ class AddressBook(UserDict):
                     if keyword in phone.value:
                         results.append(record)
                         break
+
         if results:
             print("Search results:")
             for result in results:
@@ -55,15 +64,16 @@ class AddressBook(UserDict):
             print("No results found.")
         return results
 
-# Клас, який відповідає за логіку додавання та обробки полів
+
 class Record:
     def __init__(self, name, phone=None, birthday=None):
-        self.name = name  # Обов'язкове поле name
+        self.name = name
         self.phones = [] if phone is None else [phone]
         self.birthday = birthday
 
     def to_dict(self):
         return {
+            'name': self.name.value,
             'phones': [phone.value for phone in self.phones] if self.phones else None,
             'birthday': self.birthday.value.strftime('%Y-%m-%d') if self.birthday else None
         }
@@ -114,7 +124,6 @@ class Phone(Field):
     def correct_phone(self, value):
         if not isinstance(value, str):
             raise ValueError("Phone number must be a string")
-        # Перевірка, чи містить номер телефону тільки цифри та має довжину 10
         if not value.isdigit() or len(value) != 10:
             raise ValueError("Invalid phone number")
         self.__value = value
@@ -134,15 +143,10 @@ class Birthday(Field):
 
 
 if __name__ == '__main__':
-    name = Name('Bill')
-    phone = Phone('1234567890')
-    rec = Record(name, phone)
     ab = AddressBook()
-    ab.add_record(rec)
-    ab.add_record(Record(Name("Vitalik"), Phone("234234"), Birthday(datetime(1996, 2, 2))))
-    ab.add_record(Record(Name("Oleg"), Phone("234234")))
-    ab.add_record(Record(Name("John")))
-    ab.search()
+    ab.add_record(Record(Name("Alice"), Phone("1111111111"), Birthday(datetime(1990, 5, 17))))
+    ab.add_record(Record(Name("Bob"), Phone("2222222222")))
     ab.save()
     ab.load()
+    ab.search()
 
